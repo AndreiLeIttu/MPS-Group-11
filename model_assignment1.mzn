@@ -92,10 +92,10 @@ constraint forall(t in TRUCKS)(
 );
 
 
-array[TRUCKS, ITEMS] of var bool: truck_can_pickup_item;
-array[TRUCKS, ITEMS] of var bool: truck_compatible_supplier;
+% array[TRUCKS, ITEMS] of var bool: truck_can_pickup_item;
+% array[TRUCKS, ITEMS] of var bool: truck_compatible_supplier;
 
-int: max_stacks = 1000000;
+int: max_stacks = n_input_items;
 var 1..max_stacks: stacks;
 set of int: stack_set = 1..max_stacks;
 
@@ -112,20 +112,34 @@ constraint forall(i in ITEMS)(
 );
 
 %I3:
+% constraint forall(t in TRUCKS, i in ITEMS) (
+%   if item_product[i] in truck_product_code[t] then
+%     truck_can_pickup_item[t, i] = true
+%   else
+%     truck_can_pickup_item[t, i] = false
+%   endif
+% );
+
+% %I4:
+% constraint forall(t in TRUCKS, i in ITEMS) (
+%   if item_supplier[i] in truck_supplier_code[t] then
+%     truck_compatible_supplier[t, i] = true
+%   else
+%     truck_compatible_supplier[t, i] = false
+%   endif
+% );
+
+%I3:
 constraint forall(t in TRUCKS, i in ITEMS) (
-  if item_product[i] in truck_product_code[t] then
-    truck_can_pickup_item[t, i] = true
-  else
-    truck_can_pickup_item[t, i] = false
+  if not (item_product[i] in truck_product_code[t]) then
+    assigned_truck[i] != t
   endif
 );
 
 %I4:
 constraint forall(t in TRUCKS, i in ITEMS) (
-  if item_supplier[i] in truck_supplier_code[t] then
-    truck_compatible_supplier[t, i] = true
-  else
-    truck_compatible_supplier[t, i] = false
+  if not (item_supplier[i] in truck_supplier_code[t]) then
+    assigned_truck[i] != t
   endif
 );
 
@@ -141,11 +155,15 @@ constraint forall(i in ITEMS)(
     assigned_truck[i] == stack_to_truck[assigned_stack[i]]
 );
 
+
+%STACK CONSTRAINTS
+
 %ignore unused stacks 
 constraint forall(s in stack_set where s > stacks) (
   forall(i in ITEMS) (assigned_stack[i] != s)
 );
 
+%S1: 
 constraint forall(s in stack_set where s <= stacks) (
   forall(i,j in ITEMS where assigned_stack[i] = s /\ assigned_stack[j] = assigned_stack[i]) (
     item_supplier[i] = item_supplier[j] /\
@@ -155,12 +173,27 @@ constraint forall(s in stack_set where s <= stacks) (
   )
 );
 
+%S2: 
 constraint forall(t in TRUCKS) (
   truck_stack_with_multiple_docks[t] = 0 ->  forall(s in stack_set where stack_to_truck[s] = t) (
     forall (i, j in ITEMS where assigned_stack[i] = s /\ assigned_stack[j] = assigned_stack[i])(
       item_plant_dock[i] = item_plant_dock[j]
     )
   )
+);
+
+%S4:
+constraint forall(i, j in ITEMS where i<j) (
+  item_forced_orientation[i] != item_forced_orientation[j] -> assigned_stack[i] != assigned_stack[j] 
+);
+
+%S6:
+constraint forall(s in stack_set) (
+  let {
+    var int: count_items_in_stack = sum(i in ITEMS) (assigned_stack[i] = s),
+   } 
+  in 
+    count_items_in_stack > 0 -> count_items_in_stack <= min([item_max_stack[i] | i in ITEMS where assigned_stack[i] = s])
 );
 
 %W1
