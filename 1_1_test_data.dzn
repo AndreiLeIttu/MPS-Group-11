@@ -1,0 +1,68 @@
+%%% Auto-generated Data (Global Min: 202207130000) %%%
+
+% --- ENUM DEFINITIONS ---
+Suppliers = {SUPP_62069400};
+SupplierDocks = {SDOCK_0};
+Plants = {PLANT_90018000};
+PlantDocks = {PDOCK_X0};
+Products = {PROD_852480062R};
+StackCodes = {STACK_GERB__1613_1600_1200};
+
+% --- GLOBAL PARAMETERS ---
+coefficient_inventory_cost = 10;
+coefficient_transportation_cost = 1;
+coefficient_cost_extra_truck = 0.2;
+timelimit_sec = 1800;
+
+% --- ITEMS ---
+n_input_items = 1;
+item_ident = ["0090018000_03072022000007_1"];
+item_supplier = [SUPP_62069400];
+item_supplier_dock = [SDOCK_0];
+item_plant = [PLANT_90018000];
+item_plant_dock = [PDOCK_X0];
+item_product = [PROD_852480062R];
+item_package = ["SLI---1271"];
+item_length = [1600];
+item_width = [1200];
+item_height = [975];
+item_weight = [1471.6];
+item_nesting_height = [45];
+item_stack_code = [STACK_GERB__1613_1600_1200];
+item_forced_orientation = ["none"];
+item_earliest = [0];
+item_latest = [12025];
+item_inventory_cost = [26];
+item_max_stack = [100];
+
+% --- TRUCKS ---
+n_input_trucks = 2;
+truck_id = ["P230711301", "P230711301_EXTRA_1"];
+truck_arrival = [6012, 6012];
+truck_supplier_code = [{SUPP_62069400}, {SUPP_62069400}];
+truck_supplier_loading_order = [{1}, {1}];
+truck_supplier_dock = [{}, {}];
+truck_supplier_dock_loading_order = [{1}, {1}];
+truck_plant_dock = [{PDOCK_X0}, {PDOCK_X0}];
+truck_plant_dock_loading_order = [{1}, {1}];
+truck_product_code = [{PROD_852480062R}, {PROD_852480062R}];
+truck_plant_code = [PLANT_90018000, PLANT_90018000];
+truck_length = [14500, 14500];
+truck_width = [2400, 2400];
+truck_height = [2800, 2800];
+truck_max_weight = [30000, 30000];
+truck_stack_with_multiple_docks = [0, 0];
+truck_max_density = [1500, 1500];
+truck_max_weight_on_the_bottom_item_in_stacks = [100000, 100000];
+truck_cost = [1500, 1800];
+truck_emmm = [12000, 12000];
+truck_emmr = [31500, 31500];
+truck_cm = [7808, 7808];
+truck_cjfm = [3800, 3800];
+truck_cjfc = [1040, 1040];
+truck_cjfh = [3330, 3330];
+truck_em = [7300, 7300];
+truck_ejhr = [7630, 7630];
+truck_ejcr = [2350, 2350];
+truck_ejeh = [1670, 1670];
+truck_is_extra = [0, 1];
