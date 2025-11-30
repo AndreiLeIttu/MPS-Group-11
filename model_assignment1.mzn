@@ -163,13 +163,23 @@ constraint forall(t in TRUCKS) (
   )
 );
 
-
+%W1
 constraint forall(t in TRUCKS)(
 sum(i in ITEMS where assigned_truck[i]==t)(item_weight[i])
 <= truck_max_weight[t]
-);  %W1 constraint
+);
 
+var float: total_transport_cost = sum (t in TRUCKS) (truck_cost[t]*truck_is_used[t]);
+var float: total_inventory_cost = sum(i in ITEMS)(
+    item_inventory_cost[i] * ( 
+        (item_latest[i] - truck_arrival[assigned_truck[i]]) / 1440.0 
+    ));
 
+var float: total_cost = 
+    (coefficient_transportation_cost * total_transport_cost) + 
+    (coefficient_inventory_cost * total_inventory_cost);
+    
+solve minimize total_cost;
 
 
 
