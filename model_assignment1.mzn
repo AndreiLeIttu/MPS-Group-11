@@ -2,6 +2,9 @@
 % 1. DATA IMPORT & ENUM DECLARATIONS
 % ==================================================
 % The .dzn file will populate these sets automatically
+
+include "globals.mzn";
+
 enum Suppliers;     % list of suppliers
 enum SupplierDocks; % list of supplier docks
 enum Plants;        % list of plants
@@ -102,6 +105,10 @@ array[ITEMS] of var 1..max_stacks: assigned_stack; % Which stack each item belon
 % 5. CONSTRAINTS
 % ==================================================
 
+
+% 1. Symmetry Breaking (Essential)
+constraint value_precede_chain(1..n_input_items, assigned_stack);
+
 % Link the helper variable
 constraint forall(t in TRUCKS)(
     truck_is_used[t] = bool2int(exists(i in ITEMS)(assigned_truck[i] == t))
@@ -142,7 +149,7 @@ constraint forall(t in TRUCKS, i in ITEMS) (
 );
 
 %I4
-% If an item supplier is not in a truck's suplier codes, then it is not allowed to be assigned to that truck
+% If an item supplier is not in a truck's supsplier codes, then it is not allowed to be assigned to that truck
 constraint forall(t in TRUCKS, i in ITEMS) (
   if not (item_supplier[i] in truck_supplier_code[t]) then
     assigned_truck[i] != t 
@@ -206,7 +213,7 @@ constraint forall(s in stack_set) (
     % if stack s contains more than 0 items, enforce the condition described above
 );
 
-% WEIGHT CONSTRAINTS:
+% WEIGHT CONSTRAINT:
 %W1
 % The total weight of the items from a truck should not exceed the truck's max weight
 constraint forall(t in TRUCKS)(
@@ -231,3 +238,56 @@ var float: total_cost =
     (coefficient_inventory_cost * total_inventory_cost);
     
 solve minimize total_cost;
+
+% ==================================================
+% 7. OUTPUT FORMATTING
+% ==================================================
+
+output [
+  "\n=== 1. STACKS ===\n",
+  "Stack_ID, Truck_ID, Stack_Code\n"
+] ++
+[
+  % INLINE CALCULATION: Check if stack 's' has any items
+  if sum(i in ITEMS)(bool2int(fix(assigned_stack[i]) == s)) > 0 then
+    show(s) ++ ", " ++ 
+    show(truck_id[fix(stack_to_truck[s])]) ++ ", " ++
+    % Find the first item in this stack to get the Stack Code (since all must match)
+    show(item_stack_code[min([i | i in ITEMS where fix(assigned_stack[i]) == s])]) ++ "\n"
+  else "" endif
+  | s in stack_set
+];
+
+output [
+  "\n=== 2. ITEMS ===\n",
+  "Item_ID, Truck_ID, Stack_ID, Product_Code\n"
+] ++
+[
+  show(item_ident[i]) ++ ", " ++
+  show(truck_id[fix(assigned_truck[i])]) ++ ", " ++
+  show(assigned_stack[i]) ++ ", " ++
+  show(item_product[i]) ++ "\n"
+  | i in ITEMS
+];
+
+output [
+  "\n=== 3. TRUCKS ===\n",
+  "Truck_ID, Time_Offset_Minutes, Used, Total_Weight, Max_Weight\n"
+] ++
+[
+  if fix(truck_is_used[t]) == 1 then
+    show(truck_id[t]) ++ ", " ++
+    show(truck_arrival[t]) ++ ", " ++ 
+    "YES, " ++
+    show(sum(i in ITEMS where fix(assigned_truck[i]) == t)(item_weight[i])) ++ ", " ++
+    show(truck_max_weight[t]) ++ "\n"
+  else "" endif
+  | t in TRUCKS
+];
+
+output [
+  "\n=== SUMMARY ===\n",
+  "Total Cost: " ++ show(total_cost) ++ "\n",
+  "Transportation Cost: " ++ show(total_transport_cost) ++ "\n",
+  "Inventory Cost: " ++ show(total_inventory_cost) ++ "\n"
+];
