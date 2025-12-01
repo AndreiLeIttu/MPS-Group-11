@@ -5,93 +5,161 @@
 
 include "globals.mzn";
 
-enum Suppliers;     % list of suppliers
-enum SupplierDocks; % list of supplier docks
-enum Plants;        % list of plants
-enum PlantDocks;    % list of plant docks
-enum Products;      % list of products
-enum StackCodes;    % list of stack codes
+% list of suppliers
+enum Suppliers;     
+% list of supplier docks
+enum SupplierDocks; 
+% list of plants
+enum Plants;        
+% list of plant docks
+enum PlantDocks;    
+% list of products
+enum Products;      
+% list of stack codes
+enum StackCodes;    
 
 % --- GLOBAL PARAMETERS ---
-int: coefficient_inventory_cost;      % alpha^I: coefficient of inventory cost in the objective function
-int: coefficient_transportation_cost; % alpha^T: coefficient of transportation cost in the objective function
-float: coefficient_cost_extra_truck;  % alpha^E: coefficient of cost for extra trucks
-int: timelimit_sec;                   % time limit
+% alpha^I: coefficient of inventory cost in the objective function
+int: coefficient_inventory_cost;      
+% alpha^T: coefficient of transportation cost in the objective function
+int: coefficient_transportation_cost; 
+% alpha^E: coefficient of cost for extra trucks
+float: coefficient_cost_extra_truck;  
+% time limit
+int: timelimit_sec;                   
 
 % ==================================================
 % 2. ITEM PARAMETERS (Inputs)
 % ==================================================
-int: n_input_items;                   % number of items  i
-set of int: ITEMS = 1..n_input_items; % index set for the items i
+% number of items  i
+int: n_input_items;                   
+% index set for the items i
+set of int: ITEMS = 1..n_input_items; 
 
-array[ITEMS] of string: item_ident;                % item i
-array[ITEMS] of Suppliers: item_supplier;          % IU_i: supplier of item i
-array[ITEMS] of SupplierDocks: item_supplier_dock; % IK_i: supplier dock of item i
-array[ITEMS] of Plants: item_plant;                % IP_i: destination plant of item i
-array[ITEMS] of PlantDocks: item_plant_dock;       % IG_i: plant dock of item i
-array[ITEMS] of Products: item_product;            % IR_i: product (∈  ̃γ) of item i
-array[ITEMS] of string: item_package;              % type of package
-array[ITEMS] of int: item_length;                  % IL_i: length of item i
-array[ITEMS] of int: item_width;                   % IW_i: width of item i
-array[ITEMS] of int: item_height;                  % IH_i: height of item i
-array[ITEMS] of int: item_nesting_height;          % Hat_IH_i: nesting height of item i
-array[ITEMS] of float: item_weight;                % IM_i: weight of item i
-array[ITEMS] of StackCodes: item_stack_code;       % IS_i: stackability code of item i
-array[ITEMS] of string: item_forced_orientation;   % IO_i: forced orientation of item i
-array[ITEMS] of int: item_earliest;                % IDE_i: earliest arrival time of item i
-array[ITEMS] of int: item_latest;                  % IDL_i: latest arrival time of item i
-array[ITEMS] of int: item_inventory_cost;          % IC_i: inventory cost of item i
-array[ITEMS] of int: item_max_stack;               % ISM_i: maximal stackability of item i
+% item i
+array[ITEMS] of string: item_ident;                
+% IU_i: supplier of item i
+array[ITEMS] of Suppliers: item_supplier;          
+% IK_i: supplier dock of item i
+array[ITEMS] of SupplierDocks: item_supplier_dock; 
+% IP_i: destination plant of item i
+array[ITEMS] of Plants: item_plant;                
+% IG_i: plant dock of item i
+array[ITEMS] of PlantDocks: item_plant_dock;       
+% IR_i: product of item i
+array[ITEMS] of Products: item_product;            
+% type of package
+array[ITEMS] of string: item_package;              
+% IL_i: length of item i
+array[ITEMS] of int: item_length;                  
+% IW_i: width of item i
+array[ITEMS] of int: item_width;                   
+% IH_i: height of item i
+array[ITEMS] of int: item_height;                  
+% Hat_IH_i: nesting height of item i
+array[ITEMS] of int: item_nesting_height;          
+% IM_i: weight of item i
+array[ITEMS] of float: item_weight;                
+% IS_i: stackability code of item i
+array[ITEMS] of StackCodes: item_stack_code;       
+% IO_i: forced orientation of item i
+array[ITEMS] of string: item_forced_orientation;   
+% IDE_i: earliest arrival time of item i
+array[ITEMS] of int: item_earliest;                
+% IDL_i: latest arrival time of item i
+array[ITEMS] of int: item_latest;                  
+% IC_i: inventory cost of item i
+array[ITEMS] of int: item_inventory_cost;          
+% ISM_i: maximal stackability of item i
+array[ITEMS] of int: item_max_stack;               
 
 % ==================================================
 % 3. TRUCK PARAMETERS (Inputs)
 % ==================================================
-int: n_input_trucks;                    % number of trucks
-set of int: TRUCKS = 1..n_input_trucks; % index set for the trucks
+% number of trucks
+int: n_input_trucks;                    
+% index set for the trucks
+set of int: TRUCKS = 1..n_input_trucks; 
 
-array[TRUCKS] of string: truck_id;                                   % truck t
-array[TRUCKS] of int: truck_arrival;                                 % TDA_t: arrival time of truck t at TP_t
-array[TRUCKS] of set of Suppliers: truck_supplier_code;              % TU_t: set of candidate suppliers picked-up by truck t
-array[TRUCKS] of set of int: truck_supplier_loading_order;           % TE_t: supplier loading order for truck t : it is a list indexed by the elements of TU_t containing for each supplier its loading order
-array[TRUCKS] of set of SupplierDocks: truck_supplier_dock;          % TK_ut: set of candidate supplier docks k of supplier u loaded into truck t
-array[TRUCKS] of set of int: truck_supplier_dock_loading_order;      % TKE_ut: dock loading order of supplier u for truck t : it is a list indexed by the elements of TK_ut containing for each supplier dock its loading order
-array[TRUCKS] of set of int: truck_plant_dock_loading_order;         % TGE_pt: dock loading order of plant p for truck t : it is a list indexed by the elements of TG_pt containing for each plant dock its loading order
-array[TRUCKS] of set of PlantDocks: truck_plant_dock;                % TG_pt: set of candidate plant docks g of plant p delivered by truck t
-array[TRUCKS] of set of Products: truck_product_code;                % TR_t: set of candidate products picked-up by truck t
-array[TRUCKS] of Plants: truck_plant_code;                           % TP_t: destination plant of truck t
-array[TRUCKS] of int: truck_max_weight;                              % TM^m_t: max authorized loading weight of truck t
-array[TRUCKS] of int: truck_max_density;                             % TEM_t: maximal density of stacks in truck t
-array[TRUCKS] of float: truck_cost;                                  % TC_t: cost of truck t
-array[TRUCKS] of 0..1: truck_stack_with_multiple_docks;              % TF_t: flag "stack with multiple docks" for truck t
-array[TRUCKS] of int: truck_is_extra;                                % 0 = Planned, 1 = Extra
-array[TRUCKS] of int: truck_length;                                  % TL_t: length of truck t
-array[TRUCKS] of int: truck_width;                                   % TW_t: width of truck t
-array[TRUCKS] of int: truck_height;                                  % TH_t: height of truck t
-array[TRUCKS] of int: truck_max_weight_on_the_bottom_item_in_stacks; % TMM_tγ: maximal total weight of all the items packed above the bottom item associated with product γ in any stack of truck t
-array[TRUCKS] of int: truck_emmm;                                    % EM_mm: max weight on the middle axle of the trailer
-array[TRUCKS] of int: truck_emmr;                                    % EM_mr: max weight on the rear axle of the trailer
-array[TRUCKS] of int: truck_cm;                                      % CM: weight of the tractor
-array[TRUCKS] of int: truck_cjfm;                                    % CJ_fm: distance between the front and middle axles of the tractor
-array[TRUCKS] of int: truck_cjfc;                                    % CJ_fc: distance between the front axle and the center of gravity of the tractor
-array[TRUCKS] of int: truck_cjfh;                                    % CJ_fh: distance between the front axle and the harness of the tractor
-array[TRUCKS] of int: truck_em;                                      % EM: weight of the empty trailer
-array[TRUCKS] of int: truck_ejhr;                                    % EJ_hr: distance between the harness and the rear axle of the trailer
-array[TRUCKS] of int: truck_ejcr;                                    % EJ_cr: distance between the center of gravity of the trailer and the rear axle
-array[TRUCKS] of int: truck_ejeh;                                    % EJ_eh: distance between the start of the trailer and the harness
+% truck t
+array[TRUCKS] of string: truck_id;                                   
+% TDA_t: arrival time of truck t at TP_t
+array[TRUCKS] of int: truck_arrival;                                 
+% TU_t: set of candidate suppliers picked-up by truck t
+array[TRUCKS] of set of Suppliers: truck_supplier_code;              
+% TE_t: supplier loading order for truck t : it is a list indexed by the elements of TU_t containing for each supplier its loading order
+array[TRUCKS] of set of int: truck_supplier_loading_order;           
+% TK_ut: set of candidate supplier docks k of supplier u loaded into truck t
+array[TRUCKS] of set of SupplierDocks: truck_supplier_dock;          
+% TKE_ut: dock loading order of supplier u for truck t : it is a list indexed by the elements of TK_ut containing for each supplier dock its loading order
+array[TRUCKS] of set of int: truck_supplier_dock_loading_order;      
+% TGE_pt: dock loading order of plant p for truck t : it is a list indexed by the elements of TG_pt containing for each plant dock its loading order
+array[TRUCKS] of set of int: truck_plant_dock_loading_order;         
+% TG_pt: set of candidate plant docks g of plant p delivered by truck t
+array[TRUCKS] of set of PlantDocks: truck_plant_dock;                
+% TR_t: set of candidate products picked-up by truck t
+array[TRUCKS] of set of Products: truck_product_code;                
+% TP_t: destination plant of truck t
+array[TRUCKS] of Plants: truck_plant_code;                           
+% TM^m_t: max authorized loading weight of truck t
+array[TRUCKS] of int: truck_max_weight;                              
+% TEM_t: maximal density of stacks in truck t
+array[TRUCKS] of int: truck_max_density;                             
+% TC_t: cost of truck t
+array[TRUCKS] of float: truck_cost;                                  
+% TF_t: flag "stack with multiple docks" for truck t
+array[TRUCKS] of 0..1: truck_stack_with_multiple_docks;              
+% 0 = Planned, 1 = Extra
+array[TRUCKS] of int: truck_is_extra;                                
+% TL_t: length of truck t
+array[TRUCKS] of int: truck_length;                                  
+% TW_t: width of truck t
+array[TRUCKS] of int: truck_width;                                   
+% TH_t: height of truck t
+array[TRUCKS] of int: truck_height;                                  
+% TMM_ty: maximal total weight of all the items packed above the bottom item associated with product y in any stack of truck t
+array[TRUCKS] of int: truck_max_weight_on_the_bottom_item_in_stacks; 
+% EM_mm: max weight on the middle axle of the trailer
+array[TRUCKS] of int: truck_emmm;                                    
+% EM_mr: max weight on the rear axle of the trailer
+array[TRUCKS] of int: truck_emmr;                                    
+% CM: weight of the tractor
+array[TRUCKS] of int: truck_cm;                                      
+% CJ_fm: distance between the front and middle axles of the tractor
+array[TRUCKS] of int: truck_cjfm;                                    
+% CJ_fc: distance between the front axle and the center of gravity of the tractor
+array[TRUCKS] of int: truck_cjfc;                                    
+% CJ_fh: distance between the front axle and the harness of the tractor
+array[TRUCKS] of int: truck_cjfh;                                    
+% EM: weight of the empty trailer
+array[TRUCKS] of int: truck_em;                                      
+% EJ_hr: distance between the harness and the rear axle of the trailer
+array[TRUCKS] of int: truck_ejhr;                                    
+% EJ_cr: distance between the center of gravity of the trailer and the rear axle
+array[TRUCKS] of int: truck_ejcr;                                    
+% EJ_eh: distance between the start of the trailer and the harness
+array[TRUCKS] of int: truck_ejeh;                                    
 
 % ==================================================
 % 4. DECISION VARIABLES
 % ==================================================
 
-array[ITEMS] of var TRUCKS: assigned_truck; % Main Decision: Which truck carries item i?
-array[TRUCKS] of var 0..1: truck_is_used; % Helper: Is truck t used? (1 if yes, 0 if no)
+% Main Decision: Which truck carries item i?
+array[ITEMS] of var TRUCKS: assigned_truck; 
+% Helper: Is truck t used? (1 if yes, 0 if no)
+array[TRUCKS] of var 0..1: truck_is_used; 
 
-int: max_stacks = n_input_items; % Maximum number of stacks
-var 1..max_stacks: stacks; % Stacks
-set of int: stack_set = 1..max_stacks; % Set of stacks
+% Maximum number of stacks
+int: max_stacks = n_input_items; 
+% Number of stacks
+var 1..max_stacks: stacks; 
+% Set of stacks
+set of int: stack_set = 1..max_stacks; 
 
-array[stack_set] of var TRUCKS: stack_to_truck; % Which truck each stack belongs to
-array[ITEMS] of var 1..max_stacks: assigned_stack; % Which stack each item belongs to
+% Which truck each stack belongs to
+array[stack_set] of var TRUCKS: stack_to_truck; 
+% Which stack each item belongs to
+array[ITEMS] of var 1..max_stacks: assigned_stack; 
 
 % These two decision variables were part of our initial modelling approach. We used them to model constraints I3 (truck compatible with product) and I4 (truck stops by the supplier).
 % truck_can_pickup_item[t, i]: true if truck t is allowed to pickup item i, false otherwise
@@ -105,8 +173,7 @@ array[ITEMS] of var 1..max_stacks: assigned_stack; % Which stack each item belon
 % 5. CONSTRAINTS
 % ==================================================
 
-
-% 1. Symmetry Breaking (Essential)
+% Symmetry Breaking (Essential)
 constraint value_precede_chain(1..n_input_items, assigned_stack);
 
 % Link the helper variable
@@ -117,9 +184,12 @@ constraint forall(t in TRUCKS)(
 % ITEM CONSTRAINS:
 % I1 & I2
 constraint forall(i in ITEMS)(
-  assigned_stack[i] <= stacks /\                           % The assigned stack must be valid       
-  assigned_truck[i] = stack_to_truck[assigned_stack[i]] /\ % The truck an item is assigned to, should be the same as the truck to which its stack is assigned to.
-  item_plant[i] = truck_plant_code[assigned_truck[i]]      % The item i must be assigned to a truck which holds the same plant code.
+  % The assigned stack must be valid
+  assigned_stack[i] <= stacks /\                           
+  % The truck an item is assigned to, should be the same as the truck to which its stack is assigned to.
+  assigned_truck[i] = stack_to_truck[assigned_stack[i]] /\ 
+  % The item i must be assigned to a truck which holds the same plant code.
+  item_plant[i] = truck_plant_code[assigned_truck[i]]      
 );
 
 % These are the old versions of our I3 and I4 constraints. 
