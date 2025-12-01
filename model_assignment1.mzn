@@ -180,6 +180,7 @@ constraint forall(s in stack_set where s <= stacks) (
 );
 
 %S2: 
+% if the TF_t flag is set to false, then all items in a stack must have the same plant dock
 constraint forall(t in TRUCKS) (
   truck_stack_with_multiple_docks[t] = 0 ->  forall(s in stack_set where stack_to_truck[s] = t) (
     forall (i, j in ITEMS where assigned_stack[i] = s /\ assigned_stack[j] = assigned_stack[i])(
@@ -195,12 +196,14 @@ constraint forall(i, j in ITEMS where i<j) (
 );
 
 %S6:
+% The number of items in a stack needs to be less than or equal to the minimum stackability of the items in that stack
 constraint forall(s in stack_set) (
   let {
-    var int: count_items_in_stack = sum(i in ITEMS) (assigned_stack[i] = s),
+    var int: count_items_in_stack = sum(i in ITEMS) (assigned_stack[i] = s), % number of items which were assigned to stack s
    } 
   in 
     count_items_in_stack > 0 -> count_items_in_stack <= min([item_max_stack[i] | i in ITEMS where assigned_stack[i] = s])
+    % if stack s contains more than 0 items, enforce the condition described above
 );
 
 % WEIGHT CONSTRAINTS:
