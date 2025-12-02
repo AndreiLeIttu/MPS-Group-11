@@ -237,10 +237,6 @@ constraint forall(i in ITEMS)(
     truck_arrival[assigned_truck[i]] <= item_latest[i]
 );
 
-% Link item assignment to stack assignment
-constraint forall(i in ITEMS)(
-    assigned_truck[i] == stack_to_truck[assigned_stack[i]]
-);
 
 % STACK CONSTRAINTS:
 % ignore unused stacks 
@@ -364,4 +360,5 @@ output [
   "Transportation Cost: " ++ show(total_transport_cost) ++ "\n",
   "Inventory Cost: " ++ show(total_inventory_cost) ++ "\n"
 ];
+
 
