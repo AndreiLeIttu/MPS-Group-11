@@ -173,7 +173,7 @@ array[ITEMS] of var 1..max_stacks: assigned_stack;
 % 5. CONSTRAINTS
 % ==================================================
 
-% Symmetry Breaking (Essential)
+% Symmetry Breaking
 constraint value_precede_chain(1..n_input_items, assigned_stack);
 
 % Link the helper variable
@@ -181,7 +181,7 @@ constraint forall(t in TRUCKS)(
     truck_is_used[t] = bool2int(exists(i in ITEMS)(assigned_truck[i] == t))
 );
 
-% ITEM CONSTRAINS:
+% ITEM CONSTRAINTS:
 % I1
 % link item → stack → truck, and only use existing stacks.
 constraint forall(i in ITEMS)(
@@ -222,7 +222,7 @@ constraint forall(t in TRUCKS, i in ITEMS) (
 );
 
 %I4
-% If an item supplier is not in a truck's supsplier codes, then it is not allowed to be assigned to that truck
+% If an item supplier is not in a truck's supplier codes, then it is not allowed to be assigned to that truck
 constraint forall(t in TRUCKS, i in ITEMS) (
   if not (item_supplier[i] in truck_supplier_code[t]) then
     assigned_truck[i] != t 
@@ -294,14 +294,21 @@ constraint forall(t in TRUCKS)(
 % 6. OBJECTIVE FUNCTION
 % ==================================================
 
-% Total transportation cost for the used trucks
+% Calculate total transportation cost: Sum of costs for all trucks flagged as 'used'.
+% Note: The cost for extra trucks (including the alpha^E penalty) is already pre-calculated 
+% in the 'truck_cost' parameter during preprocessing.
 var float: total_transport_cost = sum (t in TRUCKS) (truck_cost[t]*truck_is_used[t]);
 
+% Calculate total inventory cost: Sum of costs for early deliveries.
+% The cost is proportional to how early the item arrives (item_latest - truck_arrival).
+% We divide by 1440.0 to convert the time difference (in minutes) to days.
 var float: total_inventory_cost = sum(i in ITEMS)(
     item_inventory_cost[i] * ( 
         (item_latest[i] - truck_arrival[assigned_truck[i]]) / 1440.0 
     ));
 
+% The final objective minimizes the weighted sum of transport and inventory costs.
+% Coefficients alpha^T and alpha^I are applied here.
 var float: total_cost = 
     (coefficient_transportation_cost * total_transport_cost) + 
     (coefficient_inventory_cost * total_inventory_cost);
