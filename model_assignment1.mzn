@@ -182,14 +182,17 @@ constraint forall(t in TRUCKS)(
 );
 
 % ITEM CONSTRAINS:
-% I1 & I2
+% I1
+% link item → stack → truck, and only use existing stacks.
 constraint forall(i in ITEMS)(
-  % The assigned stack must be valid
-  assigned_stack[i] <= stacks /\                           
-  % The truck an item is assigned to, should be the same as the truck to which its stack is assigned to.
-  assigned_truck[i] = stack_to_truck[assigned_stack[i]] /\ 
-  % The item i must be assigned to a truck which holds the same plant code.
-  item_plant[i] = truck_plant_code[assigned_truck[i]]      
+  assigned_stack[i] <= stacks /\
+  assigned_truck[i] = stack_to_truck[assigned_stack[i]]
+);
+
+% I2
+% truck’s plant must match the item’s plant.
+constraint forall(i in ITEMS)(
+  item_plant[i] = truck_plant_code[assigned_truck[i]]
 );
 
 % These are the old versions of our I3 and I4 constraints. 
@@ -361,3 +364,4 @@ output [
   "Transportation Cost: " ++ show(total_transport_cost) ++ "\n",
   "Inventory Cost: " ++ show(total_inventory_cost) ++ "\n"
 ];
+
